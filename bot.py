@@ -7,16 +7,34 @@ import string
 
 TOKEN = "8905378875:AAHg4rVLYeY51xdKUDr7zA43jtxmCOUEIeE"
 ADMIN_ID = 6106477309
-CHANNEL_ID = -1004459846015
-MESSAGE_ID = 2
+CHANNEL_ID = -1004298773614
+MESSAGE_ID = 11
 MAX_REGISTRATIONS = 3
 DATA_FILE = "bot_data.json"
 app = None
 
-FREE_COUNTRIES = ["آلمان", "فرانسه", "بریتانیا", "کانادا", "چین", "روسیه"]
-PAID_COUNTRIES = {"آمریکا": {"price": 50, "card": "6219861815142665", "card_holder": "جوانمرد"},"ایران": {"price": 30, "card": "6219861815142665", "card_holder": "جوانمرد"}}
+# ========== لیست جدید کشورها ==========
+FREE_COUNTRIES = [
+    "بریتانیا", "فرانسه", "آلمان", "دانمارک", "ایتالیا", "کانادا",
+    "لهستان", "هلند", "بلژیک", "پرتغال", "جمهوری چک", "مجارستان",
+    "رومانی", "بلغارستان", "هند", "برزیل", "آفریقای جنوبی",
+    "عربستان سعودی", "امارات متحده عربی", "مصر", "اتیوپی",
+    "اندونزی", "مالزی", "تایلند", "ویتنام", "قزاقستان", "نیجریه",
+    "ژاپن", "کره جنوبی", "پاکستان", "اسرائیل", "استرالیا",
+    "اسپانیا", "سوئیس", "سوئد", "نروژ", "ترکیه", "فنلاند",
+    "آرژانتین", "مکزیک", "شیلی"
+]
+
+PAID_COUNTRIES = {
+    "روسیه": {"price": 50, "card": "6219861815142665", "card_holder": "جوانمرد"},
+    "آمریکا": {"price": 50, "card": "6219861815142665", "card_holder": "جوانمرد"},
+    "چین": {"price": 50, "card": "6219861815142665", "card_holder": "جوانمرد"},
+    "ایران": {"price": 30, "card": "6219861815142665", "card_holder": "جوانمرد"}
+}
+
 ALL_COUNTRIES = FREE_COUNTRIES + list(PAID_COUNTRIES.keys())
 
+# ========== دیتابیس ==========
 def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
@@ -43,15 +61,44 @@ def can_register(user_id): return get_reg_count(user_id) < MAX_REGISTRATIONS
 def gen_code(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 def show_list():
-    msg = "📋 لیست کشورها:\n\n"
-    for i, c in enumerate(ALL_COUNTRIES, 1):
-        if c in taken: st = "❌ گرفته شده"
-        elif is_locked(c): st = "🔒 قفل شده"
-        elif c in PAID_COUNTRIES: st = f"💰 ویژه - {PAID_COUNTRIES[c]['price']} تومان (نیاز به تأیید ادمین)"
-        else: st = "✅ رایگان"
-        msg += f"{i}. {c} → {st}\n"
+    msg = "📋 **لیست کشورها:**\n\n"
+    # NATO
+    msg += "🟦 **NATO** 🟦\n"
+    nato = ["آمریکا", "بریتانیا", "فرانسه", "آلمان", "دانمارک", "ایتالیا", "کانادا", "لهستان", "هلند", "بلژیک", "پرتغال", "جمهوری چک", "مجارستان", "رومانی", "بلغارستان"]
+    for c in nato:
+        if c in ALL_COUNTRIES:
+            status = get_status(c)
+            msg += f"• {c} → {status}\n"
+    
+    # BRICS
+    msg += "\n🟥 **BRICS** 🟥\n"
+    brics = ["روسیه", "هند", "برزیل", "آفریقای جنوبی", "ایران", "عربستان سعودی", "امارات متحده عربی", "مصر", "اتیوپی", "اندونزی", "مالزی", "تایلند", "ویتنام", "قزاقستان", "نیجریه"]
+    for c in brics:
+        if c in ALL_COUNTRIES:
+            status = get_status(c)
+            msg += f"• {c} → {status}\n"
+    
+    # GLOSA
+    msg += "\n🟩 **GLOSA** 🟩\n"
+    glosa = ["چین", "ژاپن", "کره جنوبی", "پاکستان", "اسرائیل", "استرالیا", "اسپانیا", "سوئیس", "سوئد", "نروژ", "ترکیه", "فنلاند", "آرژانتین", "مکزیک", "شیلی"]
+    for c in glosa:
+        if c in ALL_COUNTRIES:
+            status = get_status(c)
+            msg += f"• {c} → {status}\n"
+    
     return msg
 
+def get_status(country):
+    if country in taken:
+        return "❌ گرفته شده"
+    elif is_locked(country):
+        return "🔒 قفل شده"
+    elif country in PAID_COUNTRIES:
+        return f"💰 ویژه - {PAID_COUNTRIES[country]['price']} هزار تومان"
+    else:
+        return "✅ رایگان"
+
+# ========== توابع اصلی ==========
 async def notify_channel(text):
     try:
         await app.bot.send_message(chat_id=CHANNEL_ID, text=text, reply_to_message_id=MESSAGE_ID, parse_mode="HTML")
@@ -91,7 +138,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if rem <= 0:
         await update.message.reply_text("⛔ به حد مجاز رسیده‌اید.", parse_mode="HTML")
         return
-    await update.message.reply_text(f"سلام! لیست کشورها:\n{show_list()}\nعدد مورد نظر رو بفرست.{reg_info}", parse_mode="HTML")
+    await update.message.reply_text(f"سلام! لیست کشورها:\n{show_list()}\nعدد کشور مورد نظر رو بفرست.{reg_info}", parse_mode="HTML")
 
 async def clear_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -428,12 +475,4 @@ def main():
     app.add_handler(CommandHandler("restore", restore_country))
     app.add_handler(CommandHandler("lock", lock_country))
     app.add_handler(CommandHandler("unlock", unlock_country))
-    app.add_handler(CallbackQueryHandler(handle_admin_callback, pattern="^(allow|deny|clear)_"))
-    app.add_handler(CallbackQueryHandler(handle_final_callback, pattern="^final_(accept|reject)_"))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_country_selection))
-    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    print("✅ ربات روشن شد!")
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
+    app.add_handler(CallbackQueryHand
