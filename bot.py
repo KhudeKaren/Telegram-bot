@@ -12,13 +12,29 @@ DATA_FILE = "bot_data.json"
 app = None
 
 # ========== کشورها ==========
-FREE = ["بریتانیا", "فرانسه", "آلمان", "دانمارک", "ایتالیا", "کانادا", "لهستان", "هلند", "بلژیک", "پرتغال", 
-        "جمهوری چک", "مجارستان", "رومانی", "بلغارستان", "هند", "برزیل", "آفریقای جنوبی", "عربستان سعودی", 
-        "امارات متحده عربی", "مصر", "اتیوپی", "اندونزی", "مالزی", "تایلند", "ویتنام", "قزاقستان", "نیجریه",
-        "ژاپن", "کره جنوبی", "پاکستان", "اسرائیل", "استرالیا", "اسپانیا", "سوئیس", "سوئد", "نروژ", "ترکیه", 
-        "فنلاند", "آرژانتین", "مکزیک", "شیلی"]
+COUNTRIES = [
+    "آمریکا", "بریتانیا", "فرانسه", "آلمان", "دانمارک", "ایتالیا", "کانادا",
+    "لهستان", "هلند", "بلژیک", "پرتغال", "جمهوری چک", "مجارستان", "رومانی",
+    "بلغارستان", "روسیه", "هند", "برزیل", "آفریقای جنوبی", "ایران",
+    "عربستان سعودی", "امارات متحده عربی", "مصر", "اتیوپی", "اندونزی",
+    "مالزی", "تایلند", "ویتنام", "قزاقستان", "نیجریه", "چین", "ژاپن",
+    "کره جنوبی", "پاکستان", "اسرائیل", "استرالیا", "اسپانیا", "سوئیس",
+    "سوئد", "نروژ", "ترکیه", "فنلاند", "آرژانتین", "مکزیک", "شیلی"
+]
 
-PAID = {"روسیه": 50, "آمریکا": 50, "چین": 50, "ایران": 30}
+FREE = [
+    "بریتانیا", "فرانسه", "آلمان", "دانمارک", "ایتالیا", "کانادا",
+    "لهستان", "هلند", "بلژیک", "پرتغال", "جمهوری چک", "مجارستان",
+    "رومانی", "بلغارستان", "هند", "برزیل", "آفریقای جنوبی",
+    "عربستان سعودی", "امارات متحده عربی", "مصر", "اتیوپی", "اندونزی",
+    "مالزی", "تایلند", "ویتنام", "قزاقستان", "نیجریه", "ژاپن",
+    "کره جنوبی", "پاکستان", "اسرائیل", "استرالیا", "اسپانیا", "سوئیس",
+    "سوئد", "نروژ", "ترکیه", "فنلاند", "آرژانتین", "مکزیک", "شیلی"
+]
+
+PAID = {
+    "آمریکا": 50, "روسیه": 50, "چین": 50, "ایران": 30
+}
 ALL = FREE + list(PAID.keys())
 CARD = "6219861815142665"
 CARD_HOLDER = "جوانمرد"
@@ -48,22 +64,23 @@ def reg_count(uid): return count.get(uid, 0)
 def can_reg(uid): return reg_count(uid) < MAX_REG
 def gen_code(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-# ========== نمایش لیست کشورها ==========
+# ========== نمایش لیست با شماره ==========
 def show_list():
     groups = {
         "🟦 NATO 🟦": ["آمریکا", "بریتانیا", "فرانسه", "آلمان", "دانمارک", "ایتالیا", "کانادا", "لهستان", "هلند", "بلژیک", "پرتغال", "جمهوری چک", "مجارستان", "رومانی", "بلغارستان"],
         "🟥 BRICS 🟥": ["روسیه", "هند", "برزیل", "آفریقای جنوبی", "ایران", "عربستان سعودی", "امارات متحده عربی", "مصر", "اتیوپی", "اندونزی", "مالزی", "تایلند", "ویتنام", "قزاقستان", "نیجریه"],
         "🟩 GLOSA 🟩": ["چین", "ژاپن", "کره جنوبی", "پاکستان", "اسرائیل", "استرالیا", "اسپانیا", "سوئیس", "سوئد", "نروژ", "ترکیه", "فنلاند", "آرژانتین", "مکزیک", "شیلی"]
     }
-    msg = "📋 **لیست کشورها:**\n\n"
+    msg = "📋 **لیست کشورها (عدد رو بفرستید):**\n\n"
     for title, countries in groups.items():
         msg += f"{title}\n"
         for c in countries:
+            num = COUNTRIES.index(c) + 1
             if c in taken: s = "❌ گرفته شده"
             elif is_locked(c): s = "🔒 قفل شده"
             elif c in PAID: s = f"💰 ویژه - {PAID[c]} هزار تومان"
             else: s = "✅ رایگان"
-            msg += f"• {c} → {s}\n"
+            msg += f"{num}. {c} → {s}\n"
         msg += "\n"
     return msg
 
@@ -104,7 +121,7 @@ async def start(update, context):
     if rem <= 0:
         await update.message.reply_text("⛔ به حد مجاز رسیده‌اید.", parse_mode="HTML")
         return
-    await update.message.reply_text(f"سلام!\n{show_list()}\nعدد کشور رو بفرست.\n📊 {rem} بار باقی‌مانده.", parse_mode="HTML")
+    await update.message.reply_text(f"سلام!\n{show_list()}\nعدد مورد نظر رو بفرست.\n📊 {rem} بار باقی‌مانده.", parse_mode="HTML")
 
 async def clear_cmd(update, context):
     user = update.effective_user
@@ -120,6 +137,81 @@ async def clear_cmd(update, context):
     kb = [[InlineKeyboardButton("✅ بله", callback_data=f"clear_yes_{uid}"), InlineKeyboardButton("❌ نه", callback_data=f"clear_no_{uid}")]]
     await update.message.reply_text(f"⚠️ مطمئنی کشور {c} رو خالی کنی؟", reply_markup=InlineKeyboardMarkup(kb), parse_mode="HTML")
 
+# ========== ریست کردن شانس (ادمین) ==========
+async def reset_chance(update, context):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ دسترسی ندارید.")
+        return
+    try:
+        uid = int(context.args[0])
+        if uid not in count:
+            await update.message.reply_text(f"❌ کاربر {uid} هیچ کشوری پر نکرده.")
+            return
+        count[uid] = 0
+        save()
+        await update.message.reply_text(f"✅ تعداد دفعات ثبت‌نام کاربر {uid} به ۰ ریست شد.")
+        try:
+            await app.bot.send_message(chat_id=uid, text=f"✅ شانس شما برای ثبت‌نام کشور توسط ادمین ریست شد. می‌توانید دوباره {MAX_REG} بار کشور بگیرید.")
+        except: pass
+    except:
+        await update.message.reply_text("فرمت: /reset_chance [user_id]")
+
+# ========== مدیریت انتخاب کشور ==========
+async def handle_selection(update, context):
+    user = update.effective_user
+    if not user: return
+    uid = user.id
+    if is_banned(uid):
+        await update.message.reply_text("⛔ بن هستید.")
+        return
+    if not can_reg(uid):
+        await update.message.reply_text(f"⛔ به حد مجاز ({MAX_REG} بار) رسیده‌اید.")
+        return
+    if uid in force:
+        await update.message.reply_text(f"⛔ قبلاً کشور {force[uid]} توسط ادمین گرفته شد.", parse_mode="HTML")
+    text = update.message.text.strip()
+    if not text.isdigit():
+        await update.message.reply_text("لطفاً عدد بفرست.")
+        return
+    num = int(text) - 1
+    if num < 0 or num >= len(COUNTRIES):
+        await update.message.reply_text(f"عدد باید بین ۱ تا {len(COUNTRIES)} باشه.")
+        return
+    selected = COUNTRIES[num]
+    if is_locked(selected):
+        await update.message.reply_text(f"🔒 کشور {selected} قفل شده.")
+        return
+    if uid in force and force[uid] == selected:
+        await update.message.reply_text(f"⛔ نمی‌توانید دوباره کشور {selected} را بگیرید.")
+        return
+    if user_country(uid):
+        await update.message.reply_text("⚠️ قبلاً کشور گرفتی.")
+        return
+    if selected in taken:
+        await update.message.reply_text(f"❌ کشور {selected} گرفته شده.")
+        return
+    if selected in FREE:
+        taken[selected] = uid
+        count[uid] = reg_count(uid) + 1
+        code = gen_code()
+        codes.setdefault(uid, []).append(code)
+        save()
+        await update.message.reply_text(
+            f"✅ کشور {selected} ثبت شد!\n🔑 کد: <code>{code}</code>\n📊 {MAX_REG - reg_count(uid)} بار باقی‌مانده.\n\n⚠️ این کد را به کسی ندهید.\nبرای خالی کردن: /clear",
+            parse_mode="HTML"
+        )
+        await notify(f"✅ - {selected} پر شد")
+        username = f"@{user.username}" if user.username else "ندارد"
+        await app.bot.send_message(chat_id=ADMIN_ID, text=f"📢 {selected} پر شد!\n👤 {user.first_name}\n🆔 <code>{uid}</code>\n👤 {username}\n🔑 <code>{code}</code>", parse_mode="HTML")
+        return
+    if selected in PAID:
+        pend[uid] = {"country": selected, "username": user.username, "first_name": user.first_name, "status": "waiting_for_admin_approval", "chat_id": update.message.chat_id}
+        save()
+        kb = [[InlineKeyboardButton("✅ تأیید", callback_data=f"allow_{uid}"), InlineKeyboardButton("❌ رد", callback_data=f"deny_{uid}")]]
+        await context.bot.send_message(chat_id=ADMIN_ID, text=f"📢 درخواست خرید {selected}\n👤 {user.first_name}\n🆔 <code>{uid}</code>\n👤 @{user.username if user.username else 'ندارد'}", reply_markup=InlineKeyboardMarkup(kb), parse_mode="HTML")
+        await update.message.reply_text(f"🔔 درخواست شما برای {selected} به ادمین ارسال شد.")
+
+# ========== بقیه توابع (clear, ban, lock, etc) ==========
 async def lock_cmd(update, context):
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text("⛔ دسترسی ندارید.")
@@ -237,62 +329,6 @@ async def list_banned_cmd(update, context):
 async def list_cmd(update, context):
     await update.message.reply_text(f"📋 لیست کشورها:\n{show_list()}", parse_mode="HTML")
 
-# ========== مدیریت انتخاب کشور ==========
-async def handle_selection(update, context):
-    user = update.effective_user
-    if not user: return
-    uid = user.id
-    if is_banned(uid):
-        await update.message.reply_text("⛔ بن هستید.")
-        return
-    if not can_reg(uid):
-        await update.message.reply_text(f"⛔ به حد مجاز ({MAX_REG} بار) رسیده‌اید.")
-        return
-    if uid in force:
-        await update.message.reply_text(f"⛔ قبلاً کشور {force[uid]} توسط ادمین گرفته شد.", parse_mode="HTML")
-    text = update.message.text.strip()
-    if not text.isdigit():
-        await update.message.reply_text("لطفاً عدد بفرست.")
-        return
-    index = int(text) - 1
-    if index < 0 or index >= len(ALL):
-        await update.message.reply_text("عدد نامعتبر.")
-        return
-    selected = ALL[index]
-    if is_locked(selected):
-        await update.message.reply_text(f"🔒 کشور {selected} قفل شده.")
-        return
-    if uid in force and force[uid] == selected:
-        await update.message.reply_text(f"⛔ نمی‌توانید دوباره کشور {selected} را بگیرید.")
-        return
-    if user_country(uid):
-        await update.message.reply_text("⚠️ قبلاً کشور گرفتی.")
-        return
-    if selected in taken:
-        await update.message.reply_text(f"❌ کشور {selected} گرفته شده.")
-        return
-    if selected in FREE:
-        taken[selected] = uid
-        count[uid] = reg_count(uid) + 1
-        code = gen_code()
-        codes.setdefault(uid, []).append(code)
-        save()
-        await update.message.reply_text(
-            f"✅ کشور {selected} ثبت شد!\n🔑 کد: <code>{code}</code>\n📊 {MAX_REG - reg_count(uid)} بار باقی‌مانده.\n\n⚠️ این کد را به کسی ندهید.\nبرای خالی کردن: /clear",
-            parse_mode="HTML"
-        )
-        await notify(f"✅ - {selected} پر شد")
-        username = f"@{user.username}" if user.username else "ندارد"
-        await app.bot.send_message(chat_id=ADMIN_ID, text=f"📢 {selected} پر شد!\n👤 {user.first_name}\n🆔 <code>{uid}</code>\n👤 {username}\n🔑 <code>{code}</code>", parse_mode="HTML")
-        return
-    if selected in PAID:
-        pend[uid] = {"country": selected, "username": user.username, "first_name": user.first_name, "status": "waiting_for_admin_approval", "chat_id": update.message.chat_id}
-        save()
-        kb = [[InlineKeyboardButton("✅ تأیید", callback_data=f"allow_{uid}"), InlineKeyboardButton("❌ رد", callback_data=f"deny_{uid}")]]
-        await context.bot.send_message(chat_id=ADMIN_ID, text=f"درخواست خرید {selected} از {user.first_name}", reply_markup=InlineKeyboardMarkup(kb))
-        await update.message.reply_text(f"🔔 درخواست شما برای {selected} به ادمین ارسال شد.")
-
-# ========== دکمه‌های ادمین ==========
 async def admin_callback(update, context):
     query = update.callback_query
     await query.answer()
@@ -334,7 +370,6 @@ async def admin_callback(update, context):
         await context.bot.send_message(chat_id=uid, text="❌ درخواست شما رد شد.")
         await query.edit_message_text("رد شد.")
 
-# ========== دریافت فیش ==========
 async def handle_photo(update, context):
     user = update.effective_user
     if not user: return
@@ -356,8 +391,8 @@ async def handle_photo(update, context):
     p["photo_path"] = path
     save()
     kb = [[InlineKeyboardButton("✅ تأیید", callback_data=f"final_accept_{uid}"), InlineKeyboardButton("❌ رد", callback_data=f"final_reject_{uid}")]]
-    caption = f"فیش پرداخت\nکاربر: {p['first_name']}\nکشور: {p['country']}"
-    await context.bot.send_photo(chat_id=ADMIN_ID, photo=open(path, "rb"), caption=caption, reply_markup=InlineKeyboardMarkup(kb))
+    caption = f"فیش پرداخت\nکاربر: {p['first_name']}\nکشور: {p['country']}\n🆔 <code>{uid}</code>"
+    await context.bot.send_photo(chat_id=ADMIN_ID, photo=open(path, "rb"), caption=caption, reply_markup=InlineKeyboardMarkup(kb), parse_mode="HTML")
     await update.message.reply_text("✅ فیش ارسال شد. منتظر تأیید باشید.")
 
 async def final_callback(update, context):
@@ -428,11 +463,12 @@ def main():
     app.add_handler(CommandHandler("restore", restore_cmd))
     app.add_handler(CommandHandler("lock", lock_cmd))
     app.add_handler(CommandHandler("unlock", unlock_cmd))
+    app.add_handler(CommandHandler("reset_chance", reset_chance))  # دستور جدید
     app.add_handler(CallbackQueryHandler(admin_callback, pattern="^(allow|deny|clear)_"))
     app.add_handler(CallbackQueryHandler(final_callback, pattern="^final_(accept|reject)_"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_selection))
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    print("✅ ربات ساده‌شده روشن شد!")
+    print("✅ ربات با شماره‌گذاری اصلاح‌شده روشن شد!")
     app.run_polling()
 
 if __name__ == "__main__":
