@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
-import json, os, random, string
+import json, os
 from threading import Thread
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -43,17 +43,16 @@ CARD = "6219861815142665"
 
 # ========== دیتابیس ==========
 def load():
-    return json.load(open(DATA_FILE)) if os.path.exists(DATA_FILE) else {"taken": {}, "pending": {}, "banned": [], "force": {}, "codes": {}, "count": {}, "locked": []}
+    return json.load(open(DATA_FILE)) if os.path.exists(DATA_FILE) else {"taken": {}, "pending": {}, "banned": [], "force": {}, "count": {}, "locked": []}
 
 def save():
-    json.dump({"taken": taken, "pending": pend, "banned": banned, "force": force, "codes": codes, "count": count, "locked": locked}, open(DATA_FILE, "w"), ensure_ascii=False, indent=2)
+    json.dump({"taken": taken, "pending": pend, "banned": banned, "force": force, "count": count, "locked": locked}, open(DATA_FILE, "w"), ensure_ascii=False, indent=2)
 
 data = load()
-taken, pend, banned, force, codes, count, locked = data.get("taken", {}), data.get("pending", {}), data.get("banned", []), data.get("force", {}), data.get("codes", {}), data.get("count", {}), data.get("locked", [])
+taken, pend, banned, force, count, locked = data.get("taken", {}), data.get("pending", {}), data.get("banned", []), data.get("force", {}), data.get("count", {}), data.get("locked", [])
 
 # ========== توابع کمکی ==========
 def u_c(uid): return next((c for c, u in taken.items() if u == uid), None)
-def gen_code(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 def show_list():
     groups = [
@@ -214,16 +213,11 @@ async def handle_selection(update, context):
     if selected in FREE:
         taken[selected] = uid
         count[uid] = count.get(uid, 0) + 1
-        code = gen_code()
-        codes.setdefault(uid, []).append(code)
         save()
-        await update.message.reply_text(
-            f"✅ کشور {selected} ثبت شد!\n🔑 کد: <code>{code}</code>\n📊 {MAX_REG - count[uid]} بار مونده.\n\n⚠️ این کد را به کسی ندهید.\nبرای خالی کردن: /clear",
-            parse_mode="HTML"
-        )
+        await update.message.reply_text(f"✅ کشور {selected} برای شما ثبت شد!\n📊 {MAX_REG - count[uid]} بار دیگر می‌توانید ثبت‌نام کنید.\nبرای خالی کردن: /clear", parse_mode="HTML")
         await notify(f"✅ - {selected} پر شد")
         username = f"@{u.username}" if u.username else "ندارد"
-        await app.bot.send_message(ADMIN_ID, f"📢 {selected} پر شد!\n👤 {u.first_name}\n🆔 {uid}\n👤 {username}\n🔑 {code}", parse_mode="HTML")
+        await app.bot.send_message(ADMIN_ID, f"📢 {selected} پر شد!\n👤 {u.first_name}\n🆔 {uid}\n👤 {username}", parse_mode="HTML")
         return
     if selected in PAID:
         pend[uid] = {"country": selected, "username": u.username, "first_name": u.first_name, "status": "waiting_for_admin_approval"}
@@ -299,19 +293,13 @@ async def final_callback(update, context):
             return await q.edit_message_caption("خطا در ثبت.")
         taken[c] = uid
         count[uid] = count.get(uid, 0) + 1
-        code = gen_code()
-        codes.setdefault(uid, []).append(code)
         del pend[uid]
         save()
-        await context.bot.send_message(
-            uid,
-            f"✅ کشور {c} ثبت شد!\n🔑 کد: <code>{code}</code>\n📊 {MAX_REG - count[uid]} بار مونده.\n\n⚠️ این کد را به کسی ندهید.\nبرای خالی کردن: /clear",
-            parse_mode="HTML"
-        )
+        await context.bot.send_message(uid, f"✅ کشور {c} برای شما ثبت شد!\n📊 {MAX_REG - count[uid]} بار دیگر می‌توانید ثبت‌نام کنید.\nبرای خالی کردن: /clear", parse_mode="HTML")
         await q.edit_message_caption(f"✅ {c} ثبت شد.")
         await notify(f"✅ - {c} پر شد")
         username = f"@{update.effective_user.username}" if update.effective_user.username else "ندارد"
-        await app.bot.send_message(ADMIN_ID, f"✅ {c} توسط {username} (پرداخت ویژه)\n🔑 {code}", parse_mode="HTML")
+        await app.bot.send_message(ADMIN_ID, f"✅ {c} توسط {username} (پرداخت ویژه)", parse_mode="HTML")
     else:
         del pend[uid]
         save()
@@ -328,7 +316,7 @@ def main():
     app.add_handler(CallbackQueryHandler(final_callback, pattern="^fin_(accept|reject)_"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_selection))
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    print("✅ ربات با توکن جدید روشن شد!")
+    print("✅ ربات بدون کد اختصاصی روشن شد!")
     app.run_polling()
 
 if __name__ == "__main__":
