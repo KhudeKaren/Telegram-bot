@@ -26,7 +26,7 @@ MSG_ID = 11
 DATA_FILE = "bot_data.json"
 app = None
 
-# ========== لیست کشورها ==========
+# ========== لیست ۳۰ کشور ==========
 COUNTRIES = [
     "آمریکا", "بریتانیا", "فرانسه", "آلمان", "دانمارک", "ایتالیا", "کانادا",
     "لهستان", "هلند", "بلژیک", "پرتغال", "جمهوری چک", "مجارستان", "رومانی",
@@ -45,15 +45,14 @@ def load():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r") as f:
             return json.load(f)
-    return {"users": {}, "pending": {}, "vip_requests": {}}
+    return {"users": {}, "vip_requests": {}}
 
 def save():
     with open(DATA_FILE, "w") as f:
-        json.dump({"users": users, "pending": pending, "vip_requests": vip_requests}, f, ensure_ascii=False, indent=2)
+        json.dump({"users": users, "vip_requests": vip_requests}, f, ensure_ascii=False, indent=2)
 
 data = load()
 users = data.get("users", {})
-pending = data.get("pending", {})
 vip_requests = data.get("vip_requests", {})
 
 def get_user_country(uid):
@@ -62,14 +61,35 @@ def get_user_country(uid):
 def is_admin(uid):
     return uid == ADMIN_ID
 
-async def notify_channel(text, photo=None):
+async def notify_channel(text):
     try:
-        if photo:
-            await app.bot.send_photo(CHANNEL_ID, photo=photo, caption=text, parse_mode="HTML")
-        else:
-            await app.bot.send_message(CHANNEL_ID, text, reply_to_message_id=MSG_ID, parse_mode="HTML")
+        await app.bot.send_message(CHANNEL_ID, text, reply_to_message_id=MSG_ID, parse_mode="HTML")
     except:
         pass
+
+# ========== تابع start ==========
+async def start(update, context):
+    uid = str(update.effective_user.id)
+    country = get_user_country(uid)
+    
+    if country:
+        await update.message.reply_text(
+            f"👋 شما به عنوان **{country}** ثبت شده‌اید.",
+            parse_mode="HTML"
+        )
+    else:
+        await update.message.reply_text(
+            "🌍 **لیست کشورها (عدد بفرستید):**\n\n"
+            "🟦 NATO:\n"
+            "1. آمریکا 🇺🇸\n2. بریتانیا 🇬🇧\n3. فرانسه 🇫🇷\n4. آلمان 🇩🇪\n5. دانمارک 🇩🇰\n"
+            "6. ایتالیا 🇮🇹\n7. کانادا 🇨🇦\n8. لهستان 🇵🇱\n9. هلند 🇳🇱\n10. بلژیک 🇧🇪\n"
+            "11. پرتغال 🇵🇹\n12. جمهوری چک 🇨🇿\n13. مجارستان 🇭🇺\n14. رومانی 🇷🇴\n15. ترکیه 🇹🇷\n\n"
+            "🟥 BRICS:\n"
+            "16. روسیه 🇷🇺\n17. هند 🇮🇳\n18. برزیل 🇧🇷\n19. آفریقای جنوبی 🇿🇦\n20. ایران 🇮🇷\n"
+            "21. عربستان سعودی 🇸🇦\n22. امارات 🇦🇪\n23. مصر 🇪🇬\n24. اتیوپی 🇪🇹\n25. اندونزی 🇮🇩\n"
+            "26. کره جنوبی 🇰🇷\n27. پاکستان 🇵🇰\n28. اسرائیل 🇮🇱\n29. تایلند 🇹🇭\n30. ژاپن 🇯🇵",
+            parse_mode="HTML"
+        )
 
 # ========== دستورات ادمین ==========
 async def set_country(update, context):
@@ -95,6 +115,24 @@ async def set_country(update, context):
     except:
         await update.message.reply_text("خطا! فرمت: /set [user_id] [نام کشور]")
 
+async def remove_user(update, context):
+    if not is_admin(update.effective_user.id):
+        return await update.message.reply_text("⛔ شما اجازه این کار را ندارید.")
+    
+    try:
+        uid = context.args[0]
+        if uid not in users:
+            return await update.message.reply_text(f"کاربر {uid} ثبت نشده.")
+        del users[uid]
+        save()
+        await update.message.reply_text(f"✅ کاربر {uid} حذف شد.")
+        try:
+            await app.bot.send_message(int(uid), "❌ شما از ربات حذف شدید.")
+        except:
+            pass
+    except:
+        await update.message.reply_text("فرمت: /remove [user_id]")
+
 async def list_users(update, context):
     if not is_admin(update.effective_user.id):
         return await update.message.reply_text("⛔ شما اجازه این کار را ندارید.")
@@ -119,7 +157,6 @@ async def vip_callback(update, context):
     
     info = vip_requests[uid]
     country = info["country"]
-    user = info["user"]
     
     if action == "accept":
         price = VIP_PRICE.get(country, 50)
@@ -134,7 +171,7 @@ async def vip_callback(update, context):
         )
         vip_requests[uid]["status"] = "waiting_for_payment"
         save()
-        await query.edit_message_text(f"✅ مجوز خرید {country} برای کاربر صادر شد.")
+        await query.edit_message_text(f"✅ مجوز خرید {country} صادر شد.")
     else:
         await app.bot.send_message(int(uid), f"❌ درخواست شما برای {country} رد شد.")
         await query.edit_message_text(f"❌ درخواست {country} رد شد.")
@@ -192,10 +229,10 @@ async def final_callback(update, context):
         await notify_channel(f"✅ - {country} پر شد")
         del vip_requests[uid]
         save()
-        await query.edit_message_caption(f"✅ {country} برای کاربر ثبت شد.")
+        await query.edit_message_caption(f"✅ {country} ثبت شد.")
     else:
         await app.bot.send_message(int(uid), f"❌ پرداخت شما رد شد.")
-        await query.edit_message_caption(f"❌ پرداخت رد شد.")
+        await query.edit_message_caption(f"❌ رد شد.")
         del vip_requests[uid]
         save()
 
@@ -217,7 +254,6 @@ async def handle_selection(update, context):
         return await update.message.reply_text("⚠️ شما قبلاً کشور دارید.")
     
     if selected in VIP:
-        # درخواست VIP به ادمین
         vip_requests[uid] = {
             "country": selected,
             "user": update.effective_user,
@@ -248,6 +284,7 @@ def main():
     
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("set", set_country))
+    app.add_handler(CommandHandler("remove", remove_user))
     app.add_handler(CommandHandler("list_users", list_users))
     
     app.add_handler(CallbackQueryHandler(vip_callback, pattern="^vip_(accept|reject)_"))
@@ -256,7 +293,7 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_selection))
     app.add_handler(MessageHandler(filters.PHOTO, handle_receipt))
     
-    print("✅ ربات VIP با انتخاب عدد روشن شد!")
+    print("✅ ربات کشورگیری روشن شد!")
     app.run_polling()
 
 if __name__ == "__main__":
