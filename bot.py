@@ -504,6 +504,19 @@ async def admin_callback(update, context):
             await q.edit_message_text("لغو شد.")
         return
 
+async def list_users(update, context):
+    if not is_admin(update.effective_user.id):
+        return await update.message.reply_text("⛔ شما اجازه این کار را ندارید.")
+    
+    if not users:
+        return await update.message.reply_text("📋 هیچ کاربری ثبت نشده.")
+    
+    msg = "📋 **لیست کاربران ثبت‌شده:**\n\n"
+    for uid, country in users.items():
+        msg += f"🆔 {uid} → {country}\n"
+    
+    await update.message.reply_text(msg, parse_mode="HTML")
+
 # ========== راه‌اندازی ==========
 def main():
     global app
