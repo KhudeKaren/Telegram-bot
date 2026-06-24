@@ -4,7 +4,7 @@ import json, os
 from threading import Thread
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-# ========== پورت ساختگی برای Render ==========
+# ========== پورت ساختگی ==========
 class DummyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -19,7 +19,7 @@ def run_dummy():
 Thread(target=run_dummy, daemon=True).start()
 
 # ========== تنظیمات ==========
-TOKEN = "8846132875:AAEyWN026I6C1QgU8QQEjVaALCI4tasW350"
+TOKEN = "8650429288:AAFuXGO0WfXR1PQfuxt1Q_gfKFDATtvZdMs"
 ADMIN_ID = 6106477309
 CHANNEL_ID = -1004298773614
 MSG_ID = 11
@@ -67,7 +67,7 @@ async def notify_channel(text):
     except:
         pass
 
-# ========== تابع start ==========
+# ========== start ==========
 async def start(update, context):
     uid = str(update.effective_user.id)
     country = get_user_country(uid)
@@ -143,7 +143,7 @@ async def list_users(update, context):
         msg += f"🆔 {uid} → {country}\n"
     await update.message.reply_text(msg)
 
-# ========== دکمه‌های VIP ==========
+# ========== VIP ==========
 async def vip_callback(update, context):
     query = update.callback_query
     await query.answer()
@@ -293,7 +293,7 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_selection))
     app.add_handler(MessageHandler(filters.PHOTO, handle_receipt))
     
-    print("✅ ربات کشورگیری روشن شد!")
+    print("✅ ربات کشورگیری با توکن جدید روشن شد!")
     app.run_polling()
 
 if __name__ == "__main__":
