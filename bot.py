@@ -80,11 +80,11 @@ async def start(update, context):
     else:
         await update.message.reply_text(
             "🌍 **لیست کشورها (عدد بفرستید):**\n\n"
-            "🟦 NATO:\n"
+            "🟦 **NATO**\n"
             "1. آمریکا 🇺🇸\n2. بریتانیا 🇬🇧\n3. فرانسه 🇫🇷\n4. آلمان 🇩🇪\n5. دانمارک 🇩🇰\n"
             "6. ایتالیا 🇮🇹\n7. کانادا 🇨🇦\n8. لهستان 🇵🇱\n9. هلند 🇳🇱\n10. بلژیک 🇧🇪\n"
             "11. پرتغال 🇵🇹\n12. جمهوری چک 🇨🇿\n13. مجارستان 🇭🇺\n14. رومانی 🇷🇴\n15. ترکیه 🇹🇷\n\n"
-            "🟥 BRICS:\n"
+            "🟥 **BRICS**\n"
             "16. روسیه 🇷🇺\n17. هند 🇮🇳\n18. برزیل 🇧🇷\n19. آفریقای جنوبی 🇿🇦\n20. ایران 🇮🇷\n"
             "21. عربستان سعودی 🇸🇦\n22. امارات 🇦🇪\n23. مصر 🇪🇬\n24. اتیوپی 🇪🇹\n25. اندونزی 🇮🇩\n"
             "26. کره جنوبی 🇰🇷\n27. پاکستان 🇵🇰\n28. اسرائیل 🇮🇱\n29. تایلند 🇹🇭\n30. ژاپن 🇯🇵",
@@ -293,7 +293,7 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_selection))
     app.add_handler(MessageHandler(filters.PHOTO, handle_receipt))
     
-    print("✅ ربات کشورگیری با توکن جدید روشن شد!")
+    print("✅ ربات کشورگیری با لیست جدید روشن شد!")
     app.run_polling()
 
 if __name__ == "__main__":
